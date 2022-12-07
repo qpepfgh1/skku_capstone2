@@ -1,0 +1,28 @@
+{
+  "FTP": {
+    "ftp_ip": "localhost",
+    "ftp_port": 21,
+    "ftp_id": "admin",
+    "ftp_password": "qwer1234"
+  },
+  "DB": {
+    "AI": {
+      "server": "220.90.132.246",
+      "database": "esentai",
+      "username": "root",
+      "password": "gkdlwlsh1@#4"
+    },
+    "MES": {
+      "server": "210.180.118.222",
+      "database": "essent",
+      "username": "essent",
+      "password": "IZtk9J5PGG9m27yi"
+    }
+  },
+  "PATH": {
+    "initialdir": "C:\\Users\\hygino-AI\\PycharmProjects\\pytorchUnet\\example\\data",
+    "input": "C:\\Users\\hygino-AI\\PycharmProjects\\pytorchUnet\\example\\data\\imgs",
+    "output": "C:\\Users\\hygino-AI\\PycharmProjects\\pytorchUnet\\example\\data\\masks",
+    "test": "C:\\Users\\hygino-AI\\PycharmProjects\\pytorchUnet\\example\\data\\test"
+  }
+}

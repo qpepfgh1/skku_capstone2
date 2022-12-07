@@ -1,0 +1,1 @@
+{"test": {"current_epochs": "2", "End_epochs": "2", "time": "102.85", "train_dice_loss": "0.354", "train_iou": "0.811", "val_dice_loss": "0.327", "val_iou": "0.766", "Best_iou": "0.766", "Best_dice_loss": "0.327"}}

@@ -1,0 +1,1 @@
+{"model": {"current_epochs": "100", "End_epochs": "100", "time": "4378.94", "train_dice_loss": "0.035", "train_iou": "0.961", "val_dice_loss": "0.088", "val_iou": "0.914", "Best_iou": "0.915", "Best_dice_loss": "0.084"}}

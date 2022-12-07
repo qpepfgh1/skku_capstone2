@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 모니터링</title>
+    <!-- 폰트 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='src/font/do_hyeon.css') }}"> <!-- Do Hyeon -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='src/font/noto_sans_kr.css') }}"> <!-- Noto Sans Korean -->
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vender/bootstrap-4.5.3-dist/css/bootstrap.css') }}"> <!-- bootstrap -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vender/fontawesome/css/all.min.css') }}"> <!-- fontawesome -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/datatables.min.css') }}"> <!-- datatables -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vender/toastr-2.1.4/css/toastr.min.css') }}"> <!-- toastr 2.1.4 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> <!-- style -->
+
+    <!-- SCRIPT -->
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script> <!-- jquery -->
+    <script src="{{ url_for('static', filename='vender/bootstrap-4.5.3-dist/js/bootstrap.bundle.js') }}"></script> <!-- bootstrap -->
+    <script src="{{ url_for('static', filename='js/datatables.min.js') }}"></script> <!-- datatables -->
+    <script src="{{ url_for('static', filename='vender/momentjs/moment.js') }}"></script> <!-- momentJs -->
+    <script src="{{ url_for('static', filename='vender/toastr-2.1.4/js/toastr.min.js') }}"></script> <!-- toastr 2.1.4 -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script> <!-- script -->
+</head>
+<body>
+    <div class="container mw-100 overflow-hidden">
+        <div class="row" style="background-color: #171823; color: #ffffff; height: 10vh;">
+            <div class="col-md-5 pr-0">
+                <img class="pr-2 mt-2" src="{{ url_for('static', filename='src/img/logo.png') }}" style="height: 6vh; vertical-align: sub;">
+                <span style="display:inline; font-size:35px;">Generating AI Model Tool</span>
+            </div>
+            <div class="col-md-5 mt-4 p-0" style="display:flex;">
+                <label class="input-label mr-1">모델명 :</label>
+                <input type="text" class="form-control mr-2 p-0 pl-1" id="ckptName" style="height:25px; width:145px;">
+                <label class="input-label mr-1">Batch Size :</label>
+                <input type="number" min="1" class="form-control mr-2 p-0 pl-1" id="batchSize" value="4" style="height:25px; width:60px;">
+                <label class="input-label mr-1">Epoch Size :</label>
+                <input type="number" min="1" class="form-control mr-2 p-0 pl-1" id="epochSize" value="100" style="height:25px; width:60px;">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-warning float-right ml-2 mt-3" id="btnTest">TEST</button>
+                <button type="button" class="btn btn-success float-right ml-2 mt-3" id="btnTrain">TRAIN</button>
+                <button type="button" class="btn btn-secondary float-right ml-2 mt-3 d-none" id="btnSetOption"></button>
+            </div>
+        </div>
+        <div class="row" style="background-color: #171823; color: #ffffff; height: 13vh;">
+            <div class="col-md-8 p-0">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-2 p-0 text-center">입력 폴더경로</div>
+                        <div class="col-md-9 p-0 pr-2">
+                            <input type="text" class="form-control mw-100" id="btnInputDir" style="height:25px;" readonly>
+                        </div>
+                        <div class="col-md-1 p-0">
+                            <button type="button" class="btnSelectDir" data-inputid="btnInputDir" style="background-color: #171823; color: #ffffff; border-color: #171823;">
+                                <i class="fas fa-folder" style="font-size: 22px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2 p-0 text-center">라벨링 폴더경로</div>
+                        <div class="col-md-9 p-0 pr-2">
+                            <input type="text" class="form-control mw-100" id="btnOutputDir" style="height:25px;" readonly>
+                        </div>
+                        <div class="col-md-1 p-0">
+                            <button type="button" class="btnSelectFile" data-inputid="btnOutputDir" style="background-color: #171823; color: #ffffff; border-color: #171823;">
+                                <i class="fas fa-folder" style="font-size: 22px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2 p-0 text-center">테스트 폴더경로</div>
+                        <div class="col-md-9 p-0 pr-2">
+                            <input type="text" class="form-control mw-100" id="btnTestDir" style="height:25px;" readonly>
+                        </div>
+                        <div class="col-md-1 p-0">
+                            <button type="button" class="btnSelectDir" data-inputid="btnTestDir" style="background-color: #171823; color: #ffffff; border-color: #171823;">
+                                <i class="fas fa-folder" style="font-size: 22px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 p-0">
+                <div class="container">
+                    <div class="row mb-2">
+                        <div class="col-md-12 p-0 text-center">진행상황(%)</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-2 p-0 text-center">TRAIN</div>
+                        <div class="col-md-10 p-0 pr-3" id="train_bar"></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-2 p-0 text-center">TEST</div>
+                        <div class="col-md-10 p-0 pr-3" id="test_bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" style="background-color: #171823; color: #ffffff; height: 77vh;">
+            <div class="col-md-3 p-0">
+                <div class="container">
+                    <div class="row mt-2">
+                        <div class="col-md-5" style="font-size:20px;">모델 목록</div>
+                        <div class="col-md-7">
+                            <button type="button" class="btn btn-danger float-right mr-1" id="btnDelete" style="font-size: 10px;">삭제</button>
+                            <button type="button" class="btn btn-primary float-right mr-1 d-none" id="btnAdd" style="font-size: 10px;">추가</button>
+                            <button type="button" class="btn btn-secondary float-right mr-1" id="btnSearch" style="font-size: 10px;" onclick="getFileList();">조회</button>
+                        </div>
+                    </div>
+                    <div class="row m-1 p-2" id="modelListBox" style="background-color: rgba(255, 255, 255, 0.05); height:66vh; overflow: auto;">
+                        <div class="col-md-12">
+                            <div id="my-spinner">
+                                <div>
+                                    <span> <img src="{{ url_for('static', filename='src/img/loader.gif') }}">
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row pb-1">
+                                <div class="list-group" id="fileList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-9 p-0">
+                <div class="container">
+                    <div id="my-spinner2">
+                        <div>
+                            <span> <img src="{{ url_for('static', filename='src/img/loader.gif') }}">
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 p-0" style="font-size:25px; text-align:center;">원본</div>
+                        <div class="col-md-4 p-0" style="font-size:25px; text-align:center;">전처리</div>
+                        <div class="col-md-4 p-0" style="font-size:25px; text-align:center;">Ai 측정</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 p-0 text-center">
+                            <img class="pr-2" id="MIC1Img" src="{{ url_for('static', filename='src/img/no_image_black.png') }}" style="height: 40vh; vertical-align: sub;">
+                        </div>
+                        <div class="col-md-4 p-0 text-center">
+                            <img class="pr-2" id="MIC4Img" src="{{ url_for('static', filename='src/img/no_image_black.png') }}" style="height: 40vh; vertical-align: sub;">
+                        </div>
+                        <div class="col-md-4 p-0 text-center">
+                            <img class="pr-2" id="MIC5Img" src="{{ url_for('static', filename='src/img/no_image_black.png') }}" style="height: 40vh; vertical-align: sub;">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 p-2 text-left">
+                            <i class="fas fa-arrow-left" id="btnPrevImg" style="font-size: 70px;"></i>
+                        </div>
+                        <div class="col-md-4 p-0">
+                        </div>
+                        <div class="col-md-4 p-2 text-right">
+                            <i class="fas fa-arrow-right" id="btnNextImg" style="font-size: 70px;"></i>
+                        </div>
+                    </div>
+                    <div class="row">
+<!--                        <div class="col-md-8 p-2">-->
+<!--                            <table class="table text-center" style="color: #ffffff; border: 2px solid #cccccc;">-->
+<!--                                <tr>-->
+<!--                                    <th>Test Image</th>-->
+<!--                                    <th>Error Image</th>-->
+<!--                                    <th>ratio</th>-->
+<!--                                </tr>-->
+<!--                                <tr>-->
+<!--                                    <td id="testImage">&nbsp;</td>-->
+<!--                                    <td id="errorImage">&nbsp;</td>-->
+<!--                                    <td id="ratio">&nbsp;</td>-->
+<!--                                </tr>-->
+<!--                            </table>-->
+<!--                        </div>-->
+                        <div class="col-md-8 p-2">
+                            <table class="table text-center" style="color: #ffffff; border: 2px solid #cccccc;">
+                                <tr>
+                                    <th class="pt-1 pb-1" style="color:#0000ff;"></th>
+                                    <th class="pt-1 pb-1" style="color:#9966FF;">Num</th>
+                                    <th class="pt-1 pb-1" style="color:#9966FF;">Time</th>
+                                    <th class="pt-1 pb-1" style="color:#9966FF;">Accuracy</th>
+                                    <th class="pt-1 pb-1" style="color:#9966FF;">Loss</th>
+                                </tr>
+                                <tr>
+                                    <th class="pt-1 pb-1" style="color:#28A745;">Train</th>
+                                    <td class="pt-1 pb-1" id="resultTrainNum">&nbsp;</td>
+                                    <td class="pt-1 pb-1" id="resultTrainTime">&nbsp;</td>
+                                    <td class="pt-1 pb-1" id="resultTrainAcc">&nbsp;</td>
+                                    <td class="pt-1 pb-1" id="resultTrainLoss">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <th class="pt-1 pb-1" style="color:#FFC107;">Test</th>
+                                    <td class="pt-1 pb-1" id="resultTestNum">&nbsp;</td>
+                                    <td class="pt-1 pb-1" id="resultTestTime">&nbsp;</td>
+                                    <td class="pt-1 pb-1" id="resultTestAcc">&nbsp;</td>
+                                    <td class="pt-1 pb-1" id="resultTestLose">&nbsp;</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-4 p-2">
+                            <table class="table text-center" style="color: #ffffff; border: 2px solid #cccccc;">
+                                <tr>
+                                    <th style="color:#33ff33;">MIN</th>
+                                    <th style="color:#33ffff;">MAX</th>
+                                    <th>편심</th>
+                                </tr>
+                                <tr>
+                                    <td id="resultMax">&nbsp;</td>
+                                    <td id="resultMin">&nbsp;</td>
+                                    <td id="resultAvg">&nbsp;</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade overflow-hidden" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true" style="top:5%; left: 10%; width:80%;">
+        <div class="modal-dialog modal-xl m-0" style="width:100%;">
+            <div class="modal-content" style="background-color: #171823; border: 3px solid #ffffff; color: #ffffff;">
+                <div class="modal-header p-2" style="display:block;">
+                    <span style="font-size:22px; color:#ffffff;" id="info_modal_title">시스템 오류</span>
+                    <span>/</span>
+					<span id="info_modal_text">파일 경로 확인</span>
+                </div>
+                <div class="modal-body p-3" id="info_modal_detail_text" style="word-break: break-all; height:188px; overflow: auto;">
+                </div>
+                <div class="modal-footer p-1">
+                    <button type="button" class="btn btn-secondary pt-1 pb-1" style="font-size:10px;" data-dismiss="modal">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+
+        let imgList = new Object();
+        let imgIndex = 0;
+        let imgModelName = '';
+        let trainProcessingState = false;
+        let testProcessingState = false;
+
+        // 환경설정 조회
+        $.ajax({
+            url: 'getConfig',
+            type: 'POST',
+            data: "",
+            beforeSend: function() {
+
+            },
+            success: function (res) {
+                var data = res.data;
+                $('#btnInputDir').val(data.input);
+                $('#btnOutputDir').val(data.output);
+                $('#btnTestDir').val(data.test);
+            }
+        });
+
+        $('#btnSearch').trigger('click');
+
+        // 폴더 경로 조회
+        $('.btnSelectDir').on('click',function() {
+            var inputid = $(this).data('inputid');
+            var type = "";
+            if(inputid == 'btnInputDir') {
+                type = 'input';
+            } else if(inputid == 'btnOutputDir') {
+                type = 'output';
+            } else if(inputid == 'btnTestDir') {
+                type = 'test';
+            }
+            $.ajax({
+                url: 'getDirPath',
+                type: 'POST',
+                data: {
+                    "type"  :   type
+                },
+                beforeSend: function() {
+
+                },
+                success: function (res) {
+                    var data = res.data;
+                    if(data != "") {
+                        $('#'+inputid).val(data);
+                    }
+                }
+            });
+        });
+
+        // 파일 경로 조회
+        $('.btnSelectFile').on('click',function() {
+            var inputid = $(this).data('inputid');
+            var type = "";
+            if(inputid == 'btnInputDir') {
+                type = 'input';
+            } else if(inputid == 'btnOutputDir') {
+                type = 'output';
+            } else if(inputid == 'btnTestDir') {
+                type = 'test';
+            }
+            $.ajax({
+                url: 'getFilePath',
+                type: 'POST',
+                data: {
+                    "type"  :   type
+                },
+                beforeSend: function() {
+
+                },
+                success: function (res) {
+                    var data = res.data;
+                    if(data != "") {
+                        $('#'+inputid).val(data);
+                    }
+                }
+            });
+        });
+
+
+
+        // 모델 목록조회
+        function getFileList(ckptName) {
+            $.ajax({
+                url: 'getFileList',
+                type: 'POST',
+                data: "",
+                beforeSend: function() {
+                    $('#my-spinner').show();
+                },
+                success: function (res) {
+                    data = res.data;
+                    $('#fileList').empty();
+                    for(var i=0;i<data.length;i++) {
+                        var html = '';
+                            html += '<a href="#" class="list-group-item list-group-item-action p-1 modelList" style="background-color:initial; color:#ffffff;">'+data[i]+'</a>';
+                        $('#fileList').append(html);
+                    }
+                    $('#my-spinner').hide();
+                    $('.modelList').off('click');
+                    $('.modelList').on('click',function() {
+                        var thisNode = $(this);
+                        $('.modelList').css('color','#ffffff').removeClass('select');
+                        $(thisNode).css('color','#0069d9').addClass('select');
+                        var modelName = $(thisNode).text();
+                        getResult(modelName); // 결과값 조회
+                        getImg(modelName); // 이미지 조회
+                    });
+                    $('#fileList').find(':contains("'+ckptName+'")').trigger('click');
+                }
+            });
+        }
+
+        // 모델 삭제버튼 click
+        $('#btnDelete').on('click',function() {
+            var node = $('#fileList').find('.select');
+            var modelName = $('#fileList').find('.select').text();
+            if($('#fileList').find('.select').length != 1) {
+                toastr.warning('삭제할 모델을 선택해주세요.');
+            } else {
+                $.ajax({
+                    url: 'delModel',
+                    type: 'POST',
+                    data: {
+                        "modelName"  :   modelName
+                    },
+                    beforeSend: function() {
+
+                    },
+                    success: function (res) {
+                        if(res.result == 'ok') {
+                            $(node).remove();
+                            $('#MIC1Img').attr('src','');
+                            $('#MIC4Img').attr('src','');
+                            $('#MIC5Img').attr('src','');
+                            imgList = new Object();
+                            imgIndex = 0;
+                            $('#resultTrainTime').text('');
+                            $('#resultTrainNum').text('');
+                            $('#resultTestTime').text('');
+                            $('#resultTestNum').text('');
+                            $('#resultMax').text('&nbsp;');
+                            $('#resultMin').text('&nbsp;');
+                            $('#resultAvg').text('&nbsp;');
+                            toastr.success('삭제완료 했습니다.');
+                        } else {
+                            toastr.error(res.message);
+                        }
+                    }
+                });
+            }
+        });
+
+        // 모델 추가 버튼 click
+        $('#btnAdd').on('click',function() {
+            $.ajax({
+                url: 'addModel',
+                type: 'POST',
+                data: "",
+                beforeSend: function() {
+
+                },
+                success: function (res) {
+                    if(res.result == 'ok') {
+                        $('#btnSearch').trigger('click');
+                        toastr.success('모델을 추가했습니다.');
+                    } else if(res.result == 'fail') {
+                        toastr.warning(res.message);
+                    } else if(res.result == 'empty') {
+                    } else {
+                        toastr.error(res.message);
+                    }
+                }
+            });
+        });
+
+        // 이미지 파일 조회
+        function getImg(modelName) {
+            $.ajax({
+                url: 'getModelImg',
+                type: 'POST',
+                data: {
+                    "modelName" :   modelName
+                },
+                beforeSend: function() {
+                    $('#my-spinner2').show();
+                },
+                success: function (res) {
+                    if(res.result == 'ok') {
+                        imgList = new Object();
+                        imgList.MIC1Img = res.MIC1Img;
+                        imgList.MIC4Img = res.MIC4Img;
+                        imgList.MIC5Img = res.MIC5Img;
+                        console.log(imgList);
+
+                        if(imgList.MIC1Img.length <= imgIndex) {
+                            imgIndex = 0;
+                        }
+
+                        imgModelName = modelName;
+                        $('#MIC1Img').attr('src','data:image/jpg;base64,'+getImgBase64('./src/result/'+imgModelName+'/img/MIC1/'+imgList.MIC1Img[imgIndex]));
+                        $('#MIC4Img').attr('src','data:image/jpg;base64,'+getImgBase64('./src/result/'+imgModelName+'/img/MIC4/'+imgList.MIC4Img[imgIndex]));
+                        $('#MIC5Img').attr('src','data:image/jpg;base64,'+getImgBase64('./src/result/'+imgModelName+'/img/MIC5/'+imgList.MIC5Img[imgIndex]));
+                        //var resultImgName = imgList.MIC5Img[imgIndex];
+                        //var max = resultImgName.split("_")[6];
+                        //var min = resultImgName.split("_")[7];
+                        //var avg = resultImgName.split("_")[8].replace(".jpg","");
+                        //$('#resultMax').text(max);
+                        //$('#resultMin').text(min);
+                        //$('#resultAvg').text(avg);
+                    } else if(res.result == 'fail') {
+                        toastr.warning(res.message);
+                    } else {
+                        toastr.error(res.message);
+                    }
+                    $('#my-spinner2').hide();
+                }
+            });
+        }
+
+        // 결과값 조회
+        function getResult(modelName) {
+            $.ajax({
+                url: 'getModelResult',
+                type: 'POST',
+                data: {
+                    "modelName" :   modelName
+                },
+                beforeSend: function() {
+                },
+                success: function (res) {
+                    var data = res.data;
+                    console.log(data);
+                    $('#resultTrainTime').text(data.train_time == undefined?'':data.train_time);
+                    $('#resultTrainNum').text(data.train_num == undefined?'':data.train_num + "장");
+                    $('#resultTrainAcc').text(data.train_acc == undefined?'':parseFloat(data.train_acc).toFixed(4));
+                    $('#resultTrainLoss').text(data.train_loss == undefined?'':parseFloat(data.train_loss).toFixed(4));
+                    $('#resultTestTime').text(data.test_time == undefined?'':data.test_time);
+                    $('#resultTestNum').text(data.test_num == undefined?'':data.test_num + "장");
+                    $('#resultTestAcc').text(data.test_acc == undefined?'':data.test_acc);
+                    $('#resultTestLoss').text(data.test_loss == undefined?'':data.test_loss);
+                    // $('#testImage').text(data.test_image);
+                    // $('#errorImage').text(data.error_image);
+                    // var ratio = parseInt(data.error_image)/parseInt(data.test_image)*100;
+                    // $('#ratio').text((ratio).toString()+"%");
+                }
+            });
+        }
+
+        // 이미지 base64변경
+        function getImgBase64(filePath) {
+            var result = '';
+            if(filePath != 0) {
+                $.ajax({
+                    url: 'getImgBase64',
+                    type: 'POST',
+                    async: false,
+                    data: filePath,
+                    beforeSend: function() {
+
+                    },
+                    success: function (res) {
+                        result = res.src;
+                    }
+                });
+            }
+            return result;
+        }
+
+        // 이전 이미지 보기 버튼 click
+        $('#btnPrevImg').on('click',function() {
+            if($('#fileList').find('.select').length != 1) {
+                toastr.warning('모델을 선택해주세요.');
+                $('#modelListBox').css('border','3px solid #ffff00');
+                setTimeout(function() {
+                    $('#modelListBox').css('border','none');
+                },1000);
+                return false;
+            }
+            if(imgIndex == 0) {
+                toastr.warning('처음 이미지 입니다.');
+            } else {
+                var pm = new Promise((resolve, reject) => {
+                    setTimeout(function() {
+                        resolve()
+                    },100)
+                })
+                $('#my-spinner2').show();
+                pm.then((value) => {
+                    imgIndex = imgIndex - 1;
+
+                    $('#MIC1Img').attr('src','data:image/jpg;base64,'+getImgBase64('./src/result/'+imgModelName+'/img/MIC1/'+imgList.MIC1Img[imgIndex]));
+                    $('#MIC4Img').attr('src','data:image/jpg;base64,'+getImgBase64('./src/result/'+imgModelName+'/img/MIC4/'+imgList.MIC4Img[imgIndex]));
+                    $('#MIC5Img').attr('src','data:image/jpg;base64,'+getImgBase64('./src/result/'+imgModelName+'/img/MIC5/'+imgList.MIC5Img[imgIndex]));
+                    //var resultImgName = imgList.MIC5Img[imgIndex];
+                    //var max = resultImgName.split("_")[6];
+                    //var min = resultImgName.split("_")[7];
+                    //var avg = resultImgName.split("_")[8].replace(".jpg","");
+                    //$('#resultMax').text(max);
+                    //$('#resultMin').text(min);
+                    //$('#resultAvg').text(avg);
+                }).then((value) => {
+                    $('#my-spinner2').hide();
+                });
+
+            }
+        });
+        // 다음 이미지 보기 버튼 click
+        $('#btnNextImg').on('click',function() {
+            if($('#fileList').find('.select').length != 1) {
+                toastr.warning('모델을 선택해주세요.');
+                $('#modelListBox').css('border','3px solid #ffff00');
+                setTimeout(function() {
+                    $('#modelListBox').css('border','none');
+                },1000);
+                return false;
+            }
+            if(imgIndex == imgList.MIC1Img.length-1) {
+                toastr.warning('마지막 이미지 입니다.');
+            } else {
+                var pm = new Promise((resolve, reject) => {
+                    setTimeout(function() {
+                        resolve()
+                    },100)
+                })
+                $('#my-spinner2').show();
+                pm.then((value) => {
+                    imgIndex = imgIndex + 1;
+
+                    $('#MIC1Img').attr('src','data:image/jpg;base64,'+getImgBase64('./src/result/'+imgModelName+'/img/MIC1/'+imgList.MIC1Img[imgIndex]));
+                    $('#MIC4Img').attr('src','data:image/jpg;base64,'+getImgBase64('./src/result/'+imgModelName+'/img/MIC4/'+imgList.MIC4Img[imgIndex]));
+                    $('#MIC5Img').attr('src','data:image/jpg;base64,'+getImgBase64('./src/result/'+imgModelName+'/img/MIC5/'+imgList.MIC5Img[imgIndex]));
+                    //var resultImgName = imgList.MIC5Img[imgIndex];
+                    //var max = resultImgName.split("_")[6];
+                    //var min = resultImgName.split("_")[7];
+                    //var avg = resultImgName.split("_")[8].replace(".jpg","");
+                    //$('#resultMax').text(max);
+                    //$('#resultMin').text(min);
+                    //$('#resultAvg').text(avg);
+                }).then((value) => {
+                    $('#my-spinner2').hide();
+                });
+            }
+        });
+
+        // progressBar 셋팅
+        function setProgressBar(total, count) {
+            total = parseInt(total);
+            count = parseInt(count);
+            if(total < count) {
+                count = total;
+            }
+            if(total == 0){
+                var html = '';
+                    html += '<div class="progress" style="background-color: #cccccc; height:100%;">';
+                    html += '  <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="0" style="width: 0">0%</div>';
+                    html += '</div>';
+                return html;
+            } else {
+                var per = (count/total*100).toString();
+                var html = '';
+                    html += '<div class="progress" style="background-color: #cccccc; height:100%;">';
+                    html += '  <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="'+per+'" aria-valuemin="0" aria-valuemax="'+total+'" style="width: '+per+'%;">'+Math.round(per*10)/10+'%</div>';
+                    html += '</div>';
+                return html;
+            }
+
+        }
+
+        // 작업현황 조회
+        function getProcessingState() {
+            $.ajax({
+                url: 'getProcessingState',
+                type: 'POST',
+                data: "",
+                beforeSend: function() {
+
+                },
+                success: function (res) {
+                    var data = res.data;
+                    $('#train_bar').empty();
+                    $('#train_bar').append(setProgressBar(data.TRAIN.total, data.TRAIN.count));
+                    $('#test_bar').empty();
+                    $('#test_bar').append(setProgressBar(data.TEST.total, data.TEST.count));
+                }
+            });
+        }
+
+        // 진행상황 출력
+        setInterval(function(){
+            // console.log(trainProcessingState || testProcessingState);
+            if(trainProcessingState || testProcessingState) {
+                getProcessingState();
+            } else {
+                $('#train_bar').empty();
+                $('#test_bar').empty();
+            }
+        },1000);
+
+        // TRAIN 버튼 click
+        $('#btnTrain').on('click',function() {
+            if($('#btnInputDir').val() == "") {
+                toastr.warning('입력폴더를 선택해주세요.');
+                $('#btnInputDir').focus();
+                return false;
+            }
+            if($('#btnOutputDir').val() == "") {
+                toastr.warning('라벨링폴더를 선택해주세요.');
+                $('#btnOutputDir').focus();
+                return false;
+            }
+            if($('#ckptName').val() == "") {
+                toastr.warning('모델명을 입력해주세요.');
+                $('#ckptName').focus();
+                return false;
+            }
+            if($('#batchSize').val() == "") {
+                toastr.warning('Batch Size를 입력해주세요.');
+                $('#batchSize').focus();
+                return false;
+            }
+            if($('#epochSize').val() == "") {
+                toastr.warning('Epoch Size를 입력해주세요.');
+                $('#epochSize').focus();
+                return false;
+            }
+            $.ajax({
+                url: 'startTrain',
+                type: 'POST',
+                data: {
+                    "inputPath"     :   $('#btnInputDir').val(),
+                    "outputPath"    :   $('#btnOutputDir').val(),
+                    "ckptName"    :   $('#ckptName').val(),
+                    "batchSize"     :   $('#batchSize').val(),
+                    "epochSize"     :   $('#epochSize').val()
+                },
+                beforeSend: function() {
+                    $('#btnTrain').attr('disabled',true);
+                    $('#btnTest').attr('disabled',true);
+                    trainProcessingState = true;
+                },
+                success: function (res) {
+                    var ckptName = res.ckptName;
+                    if(res.result == 'ok') {
+                        toastr.success('학습이 완료되었습니다.');
+                    } else if(res.result == 'fail') {
+                        toastr.warning(res.message);
+                    } else {
+                        toastr.error("시스템 오류입니다.");
+                    }
+                    $('#btnTrain').attr('disabled',false);
+                    $('#btnTest').attr('disabled',false);
+                    trainProcessingState = false;
+                    getFileList(ckptName);
+                    console.log(ckptName);
+                }
+            });
+        });
+
+        // TEST 버튼 click
+        $('#btnTest').on('click',function() {
+            if($('#btnTestDir').val() == "") {
+                toastr.warning('테스트이미지 경로를 입력해주세요.');
+                $('#btnTestDir').focus();
+                return false;
+            }
+            if($('#fileList').find('.select').length != 1) {
+                toastr.warning('모델을 선택해주세요.');
+                $('#modelListBox').css('border','3px solid #ffff00');
+                setTimeout(function() {
+                    $('#modelListBox').css('border','none');
+                },1000);
+                return false;
+            }
+
+            $.ajax({
+                url: 'startTest',
+                type: 'POST',
+                data: {
+                    "testPath"  :   $('#btnTestDir').val(),
+                    "ckptName"  :   $('#fileList').find('.select').text()
+                },
+                beforeSend: function() {
+                    $('#btnTrain').attr('disabled',true);
+                    $('#btnTest').attr('disabled',true);
+                    testProcessingState = true;
+                },
+                success: function (res) {
+                    if(res.result == 'ok') {
+                        toastr.success('TEST 완료되었습니다.');
+                    } else if(res.result == 'fail') {
+                        toastr.warning(res.message);
+                    } else {
+                        toastr.error("시스템 오류입니다.");
+                    }
+                    $('#btnTrain').attr('disabled',false);
+                    $('#btnTest').attr('disabled',false);
+                    testProcessingState = false;
+                    $('#fileList').find('.select').trigger('click');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
